@@ -44,7 +44,16 @@ export async function main(
       "contracts/DemNft/InitDiamond.sol:InitDiamond",
       account,
       [demNftArgs, mintFacetArgs],
-      [[cfg.NftName, cfg.NftSymbol, cfg.NftImage]]
+      [
+        [
+          cfg.NftName,
+          cfg.NftSymbol,
+          cfg.NftImage,
+          cfg.MaxNftUseCount,
+          cfg.NftBuyPrice,
+          cfg.PaymentToken,
+        ],
+      ]
     );
 
     {

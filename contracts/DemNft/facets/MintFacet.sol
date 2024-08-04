@@ -11,7 +11,12 @@ contract MintFacet is Modifiers {
         s.rewardManager = rewardManager_;
     }
 
-    function mint(address rev1, uint256 id1, address rev2, uint256 id2) external onlyRewardManager {
+    function mint(
+        address rev1,
+        uint256 id1,
+        address rev2,
+        uint256 id2
+    ) external onlyRewardManager {
         require(s.owners[id1] == rev1, "MintFacet: rev1 is not owner of id1");
         require(s.owners[id2] == rev2, "MintFacet: rev2 is not owner of id2");
 
@@ -34,21 +39,40 @@ contract MintFacet is Modifiers {
         }
     }
 
-    function buy(address payer, address to, uint256 id) external onlyRewardManager {
-        require(s.owners[id] == s.rewardManager, "MintFacet: nft already bought");
+    function buy(
+        address payer,
+        address to,
+        uint256 id
+    ) external onlyRewardManager {
+        require(
+            s.owners[id] == s.rewardManager,
+            "MintFacet: nft already bought"
+        );
         require(s.balances[to] == 0, "MintFacet: to balance is not zero");
         require(
             IERC20(s.paymentToken).balanceOf(payer) >= s.nftBuyPrice,
             "MintFacet: Insufficient payer balance"
         );
 
-        bool success = IERC20(s.paymentToken).transferFrom(payer, address(this), s.nftBuyPrice / 100 * 20);
+        bool success = IERC20(s.paymentToken).transferFrom(
+            payer,
+            address(this),
+            (s.nftBuyPrice / 100) * 20
+        );
         require(success, "Token transfer failed");
 
-        success = IERC20(s.paymentToken).transferFrom(payer, s.nftRevenues[id][0], s.nftBuyPrice / 100 * 40);
+        success = IERC20(s.paymentToken).transferFrom(
+            payer,
+            s.nftRevenues[id][0],
+            (s.nftBuyPrice / 100) * 40
+        );
         require(success, "Token transfer failed");
 
-        success = IERC20(s.paymentToken).transferFrom(payer, s.nftRevenues[id][1], s.nftBuyPrice / 100 * 40);
+        success = IERC20(s.paymentToken).transferFrom(
+            payer,
+            s.nftRevenues[id][1],
+            (s.nftBuyPrice / 100) * 40
+        );
         require(success, "Token transfer failed");
 
         LibDemNft.transfer(s.rewardManager, to, id);

@@ -19,6 +19,10 @@ contract InitDiamond {
         string name;
         string symbol;
         string cloneBoxURI;
+
+        uint256 maxUseCount;
+        uint256 nftBuyPrice;
+        address paymentToken;
     }
 
     function init(Args memory args_) external {
@@ -36,9 +40,8 @@ contract InitDiamond {
         s.symbol = args_.symbol;
         s.cloneBoxURI = args_.cloneBoxURI;
 
-        s.maxUseCount = 5;
-        s.nftBuyPrice = 1 ether;
-
-        s.paymentToken = 0x4200000000000000000000000000000000000022;
+        s.maxUseCount = args_.maxUseCount;
+        s.nftBuyPrice = args_.nftBuyPrice;
+        s.paymentToken = args_.paymentToken;
     }
 }
