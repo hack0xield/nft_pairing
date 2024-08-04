@@ -37,6 +37,8 @@ contract InitDiamond {
         s.cloneBoxURI = args_.cloneBoxURI;
 
         s.maxUseCount = 5;
-        s.nftBuyPrice = 0.0001 ether;
+        s.nftBuyPrice = 1 ether;
+
+        s.paymentToken = 0x4200000000000000000000000000000000000022;
     }
 }

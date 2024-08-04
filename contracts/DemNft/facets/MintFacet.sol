@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import {Modifiers} from "../libraries/LibAppStorage.sol";
 import {LibDemNft} from "../libraries/LibDemNft.sol";
 
@@ -32,21 +34,24 @@ contract MintFacet is Modifiers {
         }
     }
 
-    function buy(uint256 id, address to) external payable onlyRewardManager {
+    function buy(address payer, address to, uint256 id) external onlyRewardManager {
         require(s.owners[id] == s.rewardManager, "MintFacet: nft already bought");
         require(s.balances[to] == 0, "MintFacet: to balance is not zero");
         require(
-            s.nftBuyPrice == msg.value,
-            "MintFacet: Incorrect ethers value"
+            IERC20(s.paymentToken).balanceOf(payer) >= s.nftBuyPrice,
+            "MintFacet: Insufficient payer balance"
         );
 
+        bool success = IERC20(s.paymentToken).transferFrom(payer, address(this), s.nftBuyPrice / 100 * 20);
+        require(success, "Token transfer failed");
+
+        success = IERC20(s.paymentToken).transferFrom(payer, s.nftRevenues[id][0], s.nftBuyPrice / 100 * 40);
+        require(success, "Token transfer failed");
+
+        success = IERC20(s.paymentToken).transferFrom(payer, s.nftRevenues[id][1], s.nftBuyPrice / 100 * 40);
+        require(success, "Token transfer failed");
+
         LibDemNft.transfer(s.rewardManager, to, id);
-
-        (bool success, ) = s.nftRevenues[id][0].call{value: msg.value / 100 * 40}("");
-        require(success, "MintFacet: Eth send 1 failed");
-
-        (success, ) = s.nftRevenues[id][1].call{value: msg.value / 100 * 40}("");
-        require(success, "MintFacet: Eth send 2 failed");
     }
 
     function withdraw() external onlyRewardManager {

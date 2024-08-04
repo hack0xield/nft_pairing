@@ -28,6 +28,7 @@ struct AppStorage {
     mapping(address => uint256) useCount;
     mapping(uint256 => address[2]) nftRevenues;
 
+    address paymentToken;
 }
 
 library LibAppStorage {
