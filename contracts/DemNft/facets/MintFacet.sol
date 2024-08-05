@@ -7,8 +7,9 @@ import {Modifiers} from "../libraries/LibAppStorage.sol";
 import {LibDemNft} from "../libraries/LibDemNft.sol";
 
 contract MintFacet is Modifiers {
-    function setRewardManager(address rewardManager_) external onlyOwner {
+    function setRewardManager(address rewardManager_, uint256 nftCount) external onlyOwner {
         s.rewardManager = rewardManager_;
+        LibDemNft.mint(nftCount, s.rewardManager);
     }
 
     function mint(

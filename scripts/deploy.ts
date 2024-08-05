@@ -6,9 +6,10 @@ import { deployConfig as testCfg } from "../deploy-test.config";
 
 export async function main(
   tests: boolean,
-  gas: { totalGasUsed: BigInt }
+  gas: { totalGasUsed: BigInt },
 ): Promise<[DeployedContracts]> {
-  const LOG = !tests ? console.log.bind(console) : function () {};
+  //const LOG = !tests ? console.log.bind(console) : function () {};
+  const LOG = console.log.bind(console);
   const accounts = await ethers.getSigners();
   const account = await accounts[0].getAddress();
   const rewardManager = accounts[1];
@@ -36,8 +37,24 @@ export async function main(
   async function deployNft() {
     const [demNftArgs, mintFacetArgs] = await infra.deployFacets(
       "DemNft",
-      "MintFacet"
+      "MintFacet",
     );
+
+    let paymentToken = cfg.PaymentToken;
+    if (tests == true) {
+      const contract = await (
+        await ethers.getContractFactory("PaymentERC20")
+      ).deploy();
+      await contract.waitForDeployment();
+      const receipt = await contract.deploymentTransaction().wait();
+      paymentToken = receipt.contractAddress;
+
+      LOG(`>> Test PaymentToken address: ${paymentToken}`);
+      LOG(
+        `>> Test PaymentToken deploy gas used: ${strDisplay(receipt.gasUsed)}`,
+      );
+      gas.totalGasUsed += receipt.gasUsed;
+    }
 
     nftAddress = await infra.deployDiamond(
       "DemNft",
@@ -51,18 +68,20 @@ export async function main(
           cfg.NftImage,
           cfg.MaxNftUseCount,
           cfg.NftBuyPrice,
-          cfg.PaymentToken,
+          paymentToken,
         ],
-      ]
+      ],
     );
 
     {
       const nftMint = await ethers.getContractAt(
         "MintFacet",
         nftAddress,
-        accounts[0]
+        accounts[0],
       );
-      const tx = await (await nftMint.setRewardManager(account)).wait();
+      const tx = await (
+        await nftMint.setRewardManager(rewardManagerAddr, cfg.RewardMgrInitNfts)
+      ).wait();
       LOG(`>> setRewardManager gas used: ${strDisplay(tx.gasUsed)}`);
       gas.totalGasUsed += tx.gasUsed;
     }
@@ -73,7 +92,7 @@ export async function main(
 // and properly handle errors.
 if (require.main === module) {
   const gas = { totalGasUsed: 0n };
-  main(false, gas).catch((error) => {
+  main(true, gas).catch((error) => {
     console.error(error);
     process.exitCode = 1;
   });
