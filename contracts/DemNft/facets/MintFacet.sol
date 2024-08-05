@@ -40,43 +40,42 @@ contract MintFacet is Modifiers {
         }
     }
 
-    function buy(
-        address payer,
-        address to,
+    function purchaseNft(
+        address buyer,
         uint256 id
     ) external onlyRewardManager {
         require(
             s.owners[id] == s.rewardManager,
-            "MintFacet: nft already bought"
+            "MintFacet: nft already bought or not exist"
         );
-        require(s.balances[to] == 0, "MintFacet: to balance is not zero");
+        require(s.balances[buyer] == 0, "MintFacet: buyer balance is not zero");
         require(
-            IERC20(s.paymentToken).balanceOf(payer) >= s.nftBuyPrice,
-            "MintFacet: Insufficient payer balance"
+            IERC20(s.paymentToken).balanceOf(buyer) >= s.nftBuyPrice,
+            "MintFacet: Insufficient buyer balance"
         );
 
         bool success = IERC20(s.paymentToken).transferFrom(
-            payer,
+            buyer,
             address(this),
             (s.nftBuyPrice / 100) * 20
         );
         require(success, "Token transfer failed");
 
         success = IERC20(s.paymentToken).transferFrom(
-            payer,
+            buyer,
             s.nftRevenues[id][0],
             (s.nftBuyPrice / 100) * 40
         );
         require(success, "Token transfer failed");
 
         success = IERC20(s.paymentToken).transferFrom(
-            payer,
+            buyer,
             s.nftRevenues[id][1],
             (s.nftBuyPrice / 100) * 40
         );
         require(success, "Token transfer failed");
 
-        LibDemNft.transfer(s.rewardManager, to, id);
+        LibDemNft.transfer(s.rewardManager, buyer, id);
     }
 
     function withdraw() external onlyRewardManager {

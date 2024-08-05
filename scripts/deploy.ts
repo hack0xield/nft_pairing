@@ -92,7 +92,7 @@ export async function main(
 // and properly handle errors.
 if (require.main === module) {
   const gas = { totalGasUsed: 0n };
-  main(true, gas).catch((error) => {
+  main(false, gas).catch((error) => {
     console.error(error);
     process.exitCode = 1;
   });

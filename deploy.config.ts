@@ -5,8 +5,8 @@ export let deployConfig = {
     NftSymbol: "TEST",
     NftImage: "ipfs://QmUzSR5yDqtsjnzfvfFZWe2JyEryhm7UgUfhKr9pkokG7C",
 
-    RewardMgr: "0x8C07e7c7bfCCAC4d0B06938F5889e3621626FeFa",
-    RewardMgrInitNfts: 10,
+    RewardMgr: "0x674f98D7a3b41170932b2241FFaa38b5eD484D3a",
+    RewardMgrInitNfts: 2,
 
     MaxNftUseCount: 5,
     NftBuyPrice: ethers.parseEther("1"),
