@@ -22,6 +22,9 @@ contract InitDiamond {
 
         uint256 maxUseCount;
         uint256 nftBuyPrice;
+        uint256 nftCdSec;
+        uint256 pairingLimit;
+        uint256 pairingChance;
         address paymentToken;
     }
 
@@ -42,6 +45,9 @@ contract InitDiamond {
 
         s.maxUseCount = args_.maxUseCount;
         s.nftBuyPrice = args_.nftBuyPrice;
+        s.nftCdSec = args_.nftCdSec;
+        s.pairingLimit = args_.pairingLimit;
+        s.pairingChance = args_.pairingChance;
         s.paymentToken = args_.paymentToken;
     }
 }

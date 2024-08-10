@@ -48,7 +48,7 @@ const config: HardhatUserConfig = {
     blast_sepolia: {
       url: "https://sepolia.blast.io",
       accounts: [privateKey],
-      gasPrice: 1000000000,
+      gasPrice: 10000,
     },
   },
   solidity: {

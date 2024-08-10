@@ -10,5 +10,8 @@ export let deployConfig = {
 
     MaxNftUseCount: 5,
     NftBuyPrice: ethers.parseEther("1"),
+    nftCdSec: 180,
+    pairingLimit: 1,
+    pairingChance: 50,
     PaymentToken: "0x4200000000000000000000000000000000000022"
 }

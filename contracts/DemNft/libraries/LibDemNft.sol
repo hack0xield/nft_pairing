@@ -50,8 +50,8 @@ library LibDemNft {
 
     function setOwner(uint256 tokenId_, address newOwner_) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address oldOwner = s.owners[tokenId_];
 
+        address oldOwner = s.owners[tokenId_];
         s.owners[tokenId_] = newOwner_;
 
         if (oldOwner != address(0)) {
