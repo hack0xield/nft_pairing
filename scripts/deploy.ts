@@ -7,9 +7,9 @@ import { deployConfig as testCfg } from "../deploy-test.config";
 export async function main(
   tests: boolean,
   gas: { totalGasUsed: BigInt },
-): Promise<[DeployedContracts]> {
-  //const LOG = !tests ? console.log.bind(console) : function () {};
-  const LOG = console.log.bind(console);
+) {
+  const LOG = !tests ? console.log.bind(console) : function () {};
+  //const LOG = console.log.bind(console);
   const accounts = await ethers.getSigners();
   const account = await accounts[0].getAddress();
   const rewardManager = accounts[1];
@@ -28,19 +28,20 @@ export async function main(
     : cfg.RewardMgr;
 
   let nftAddress;
+  let paymentToken;
   await deployNft();
 
   LOG(`> Total gas used: ${strDisplay(gas.totalGasUsed)}`);
 
-  return nftAddress;
+  return [nftAddress, paymentToken];
 
   async function deployNft() {
-    const [demNftArgs, mintFacetArgs] = await infra.deployFacets(
-      "DemNft",
+    const [nftTokenArgs, mintFacetArgs] = await infra.deployFacets(
+      "NftToken",
       "MintFacet",
     );
 
-    let paymentToken = cfg.PaymentToken;
+    paymentToken = cfg.PaymentToken;
     if (tests == true) {
       const contract = await (
         await ethers.getContractFactory("PaymentERC20")
@@ -57,10 +58,10 @@ export async function main(
     }
 
     nftAddress = await infra.deployDiamond(
-      "DemNft",
-      "contracts/DemNft/InitDiamond.sol:InitDiamond",
+      "NftPairing",
+      "contracts/NftPairing/InitDiamond.sol:InitDiamond",
       account,
-      [demNftArgs, mintFacetArgs],
+      [nftTokenArgs, mintFacetArgs],
       [
         [
           cfg.NftName,
@@ -70,7 +71,7 @@ export async function main(
           cfg.NftBuyPrice,
           cfg.nftCdSec,
           cfg.pairingLimit,
-          cfg.pairingChance,
+          //cfg.pairingChance,
           paymentToken,
         ],
       ],

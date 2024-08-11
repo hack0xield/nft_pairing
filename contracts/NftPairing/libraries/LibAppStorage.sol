@@ -28,7 +28,7 @@ import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEnde
     uint256 nftBuyPrice;
     uint256 nftCdSec;
     uint256 pairingLimit;
-    uint256 pairingChance;
+    //uint256 pairingChance;
     address paymentToken;
 
     mapping(uint256 => uint256) useCount;

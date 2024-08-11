@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol";
 
 import {Modifiers} from "../libraries/LibAppStorage.sol";
-import {LibDemNft} from "../libraries/LibDemNft.sol";
+import {LibNftPairing} from "../libraries/LibNftPairing.sol";
 
 contract MintFacet is Modifiers {
     using DoubleEndedQueue for DoubleEndedQueue.Bytes32Deque;
@@ -20,6 +20,14 @@ contract MintFacet is Modifiers {
     ) external view returns (uint256) {
         bytes32 key = keyForIdsPair(id1_, id2_);
         return s.pairUsedCount[key];
+    }
+
+    function getNftRevenues(uint256 id_) external view returns (address[2] memory) {
+        return s.nftRevenues[id_];
+    }
+
+    function getNextIdInQueue() external view returns (uint256) {
+        return uint256(s.idsQueue.front());
     }
 
     function getTimeUntilNextMint(uint256 id_) public view returns (uint256) {
@@ -39,7 +47,7 @@ contract MintFacet is Modifiers {
         uint256 nftCount_
     ) external onlyOwner {
         s.rewardManager = rewardManager_;
-        LibDemNft.mint(nftCount_, s.rewardManager);
+        LibNftPairing.mint(nftCount_, s.rewardManager);
     }
 
     function mint(
@@ -49,8 +57,8 @@ contract MintFacet is Modifiers {
         uint256 id2_
     ) external onlyRewardManager {
         require(rev1_ != rev2_, "MintFacet: rev1 and rev2 should be different");
-        require(address(0) == rev1_, "MintFacet: rev1 invalid address");
-        require(address(0) == rev2_, "MintFacet: rev2 invalid address");
+        require(address(0) != rev1_, "MintFacet: rev1 invalid address");
+        require(address(0) != rev2_, "MintFacet: rev2 invalid address");
         require(s.owners[id1_] == rev1_, "MintFacet: rev1 is not owner of id1");
         require(s.owners[id2_] == rev2_, "MintFacet: rev2 is not owner of id2");
         require(isInCd(id1_) == false, "MintFacet: id1 Nft is in cooldown");
@@ -88,7 +96,7 @@ contract MintFacet is Modifiers {
         s.nftRevenues[newNftId][0] = rev1_;
         s.nftRevenues[newNftId][1] = rev2_;
 
-        LibDemNft.mint(1, address(this));
+        LibNftPairing.mint(1, address(this));
 
         s.idsQueue.pushBack(bytes32(newNftId));
     }
@@ -96,7 +104,7 @@ contract MintFacet is Modifiers {
     function incUseCount(address rev_, uint256 id_) internal {
         s.useCount[id_] += 1;
         if (s.useCount[id_] >= s.maxUseCount) {
-            LibDemNft.transfer(rev_, address(0), id_); //burn
+            LibNftPairing.transfer(rev_, address(0), id_); //burn
             delete s.useCount[id_];
         }
     }
@@ -113,7 +121,7 @@ contract MintFacet is Modifiers {
         );
 
         uint256 nftId = uint256(s.idsQueue.popFront());
-        LibDemNft.transfer(address(this), msg.sender, nftId);
+        LibNftPairing.transfer(address(this), msg.sender, nftId);
 
         IERC20(s.paymentToken).transferFrom(
             msg.sender,
@@ -123,14 +131,16 @@ contract MintFacet is Modifiers {
 
         IERC20(s.paymentToken).transferFrom(
             msg.sender,
-            s.nftRevenues[id_][0],
+            s.nftRevenues[nftId][0],
             (s.nftBuyPrice / 100) * 40
         );
 
         IERC20(s.paymentToken).transferFrom(
             msg.sender,
-            s.nftRevenues[id_][1],
+            s.nftRevenues[nftId][1],
             (s.nftBuyPrice / 100) * 40
         );
+
+        delete s.nftRevenues[nftId];
     }
 }
