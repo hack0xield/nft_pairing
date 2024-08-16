@@ -50,6 +50,10 @@ contract MintFacet is Modifiers {
         LibNftPairing.mint(nftCount_, s.rewardManager);
     }
 
+    function squeezeQueue() external onlyRewardManager {
+        _squeezeQueue();
+    }
+
     function mint(
         address rev1_,
         uint256 id1_,
@@ -120,6 +124,7 @@ contract MintFacet is Modifiers {
             "MintFacet: Insufficient allowance for payment token"
         );
 
+        _squeezeQueue();
         uint256 nftId = uint256(s.idsQueue.popFront());
         LibNftPairing.transfer(address(this), msg.sender, nftId);
 
@@ -142,5 +147,15 @@ contract MintFacet is Modifiers {
         );
 
         delete s.nftRevenues[nftId];
+    }
+
+    function _squeezeQueue() internal {
+        while (s.idsQueue.length() > 0) {
+            uint256 id = uint256(s.idsQueue.front());
+            if (s.owners[id] == address(this)) {
+                return;
+            }
+            s.idsQueue.popFront();
+        }
     }
 }
