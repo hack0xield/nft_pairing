@@ -22,7 +22,9 @@ contract MintFacet is Modifiers {
         return s.pairUsedCount[key];
     }
 
-    function getNftRevenues(uint256 id_) external view returns (address[2] memory) {
+    function getNftRevenues(
+        uint256 id_
+    ) external view returns (address[2] memory) {
         return s.nftRevenues[id_];
     }
 
@@ -59,7 +61,7 @@ contract MintFacet is Modifiers {
         uint256 id1_,
         address rev2_,
         uint256 id2_
-    ) external onlyRewardManager {
+    ) external onlyRewardManager returns (uint256 newId) {
         require(rev1_ != rev2_, "MintFacet: rev1 and rev2 should be different");
         require(address(0) != rev1_, "MintFacet: rev1 invalid address");
         require(address(0) != rev2_, "MintFacet: rev2 invalid address");
@@ -74,7 +76,7 @@ contract MintFacet is Modifiers {
             "MintFacet: pairing limit reached for these nfts"
         );
 
-        makePairedNft(rev1_, rev2_);
+        newId = makePairedNft(rev1_, rev2_);
 
         incUseCount(rev1_, id1_);
         incUseCount(rev2_, id2_);
@@ -95,14 +97,17 @@ contract MintFacet is Modifiers {
         return keccak256(abi.encodePacked(elem1, elem2));
     }
 
-    function makePairedNft(address rev1_, address rev2_) internal {
-        uint256 newNftId = s.tokenIdsCount;
-        s.nftRevenues[newNftId][0] = rev1_;
-        s.nftRevenues[newNftId][1] = rev2_;
+    function makePairedNft(
+        address rev1_,
+        address rev2_
+    ) internal returns (uint256 newId) {
+        newId = s.tokenIdsCount;
+        s.nftRevenues[newId][0] = rev1_;
+        s.nftRevenues[newId][1] = rev2_;
 
         LibNftPairing.mint(1, address(this));
 
-        s.idsQueue.pushBack(bytes32(newNftId));
+        s.idsQueue.pushBack(bytes32(newId));
     }
 
     function incUseCount(address rev_, uint256 id_) internal {
@@ -113,19 +118,23 @@ contract MintFacet is Modifiers {
         }
     }
 
-    function purchaseNft() external {
-        require(s.idsQueue.length() > 0, "MintFacet: Minted nfts queue is empty");
+    function purchaseNft() external returns (uint256 nftId) {
+        require(
+            s.idsQueue.length() > 0,
+            "MintFacet: Minted nfts queue is empty"
+        );
         require(
             IERC20(s.paymentToken).balanceOf(msg.sender) >= s.nftBuyPrice,
             "MintFacet: Insufficient sender balance"
         );
         require(
-            IERC20(s.paymentToken).allowance(msg.sender, address(this)) >= s.nftBuyPrice,
+            IERC20(s.paymentToken).allowance(msg.sender, address(this)) >=
+                s.nftBuyPrice,
             "MintFacet: Insufficient allowance for payment token"
         );
 
         _squeezeQueue();
-        uint256 nftId = uint256(s.idsQueue.popFront());
+        nftId = uint256(s.idsQueue.popFront());
         LibNftPairing.transfer(address(this), msg.sender, nftId);
 
         IERC20(s.paymentToken).transferFrom(
