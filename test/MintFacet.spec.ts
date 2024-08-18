@@ -2,6 +2,7 @@ import {
   time,
   loadFixture,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import "@nomicfoundation/hardhat-chai-matchers";
 import { expect } from "chai";
 import { Contract, Signer } from "ethers";
 import { ethers, hre } from "hardhat";
@@ -23,8 +24,6 @@ describe("MintFacet Test", async () => {
 
   let user1;
   let user2;
-  let user1Addr;
-  let user2Addr;
   let id1;
   let id2;
   let id3;
@@ -43,8 +42,6 @@ describe("MintFacet Test", async () => {
 
     user1 = accounts[2];
     user2 = accounts[3];
-    user1Addr = await user1.getAddress();
-    user2Addr = await user2.getAddress();
     id1 = 0;
     id2 = 1;
     id3 = 2;
@@ -65,32 +62,33 @@ describe("MintFacet Test", async () => {
   it("Mint Initial", async () => {
     tx = mintFacet
       .connect(rewardManager)
-      .mint(ethers.ZeroAddress, id1, user2Addr, id2);
+      .mint(ethers.ZeroAddress, id1, user2, id2);
     await expect(tx).to.be.revertedWith("MintFacet: rev1 invalid address");
 
     tx = mintFacet
       .connect(rewardManager)
-      .mint(user1Addr, id1, ethers.ZeroAddress, id2);
+      .mint(user1, id1, ethers.ZeroAddress, id2);
     await expect(tx).to.be.revertedWith("MintFacet: rev2 invalid address");
 
-    tx = mintFacet.connect(rewardManager).mint(user1Addr, id1, user1Addr, id2);
+    tx = mintFacet.connect(rewardManager).mint(user1, id1, user1, id2);
     await expect(tx).to.be.revertedWith(
       "MintFacet: rev1 and rev2 should be different",
     );
 
-    tx = mintFacet.connect(rewardManager).mint(user1Addr, id1, user2Addr, id2);
+    tx = mintFacet.connect(rewardManager).mint(user1, id1, user2, id2);
     await expect(tx).to.be.revertedWith("MintFacet: rev1 is not owner of id1");
 
     await nftToken
       .connect(rewardManager)
-      .transferFrom(rewardManagerAddr, user1Addr, id1);
-    tx = mintFacet.connect(rewardManager).mint(user1Addr, id1, user2Addr, id2);
+      .transferFrom(rewardManagerAddr, user1, id1);
+    tx = mintFacet.connect(rewardManager).mint(user1, id1, user2, id2);
     await expect(tx).to.be.revertedWith("MintFacet: rev2 is not owner of id2");
 
     await nftToken
       .connect(rewardManager)
-      .transferFrom(rewardManagerAddr, user2Addr, id2);
-    await mintFacet.connect(rewardManager).mint(user1Addr, id1, user2Addr, id2); //Successful
+      .transferFrom(rewardManagerAddr, user2, id2);
+    tx = await mintFacet.connect(rewardManager).mint(user1, id1, user2, id2); //Successful
+    await expect(tx).to.emit(mintFacet, "NftMint").withArgs(id1, id2, id3);
 
     expect(await nftToken.totalSupply()).to.be.equal(3);
     expect(await mintFacet.getUseCount(id1)).to.be.equal(1);
@@ -102,18 +100,18 @@ describe("MintFacet Test", async () => {
 
     expect((await mintFacet.getNftRevenues(id3)).length).to.be.equal(2);
     let revs = await mintFacet.getNftRevenues(id3);
-    expect(revs[0]).to.be.equal(user1Addr);
-    expect(revs[1]).to.be.equal(user2Addr);
+    expect(revs[0]).to.be.equal(user1);
+    expect(revs[1]).to.be.equal(user2);
   });
 
   it("Try Mint In CoolDown", async () => {
-    tx = mintFacet.connect(rewardManager).mint(user1Addr, id1, user2Addr, id2);
+    tx = mintFacet.connect(rewardManager).mint(user1, id1, user2, id2);
     await expect(tx).to.be.revertedWith("MintFacet: id1 Nft is in cooldown");
 
     expect(await mintFacet.getTimeUntilNextMint(id1)).to.be.above(0);
     await time.increase(testCfg.nftCdSec);
 
-    tx = mintFacet.connect(rewardManager).mint(user1Addr, id1, user2Addr, id2);
+    tx = mintFacet.connect(rewardManager).mint(user1, id1, user2, id2);
     await expect(tx).to.be.revertedWith(
       "MintFacet: pairing limit reached for these nfts",
     );
@@ -133,7 +131,8 @@ describe("MintFacet Test", async () => {
     );
 
     await paymentToken.connect(user1).approve(nftAddress, testCfg.NftBuyPrice);
-    await mintFacet.connect(user1).purchaseNft(); //Successful
+    tx = await mintFacet.connect(user1).purchaseNft(); //Successful
+    await expect(tx).to.emit(mintFacet, "NftPurchase").withArgs(user1, id3);
 
     tx = mintFacet.getNextIdInQueue();
     await expect(tx).to.be.revertedWithCustomError(mintFacet, "QueueEmpty()");

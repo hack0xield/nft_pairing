@@ -10,6 +10,17 @@ import {LibNftPairing} from "../libraries/LibNftPairing.sol";
 contract MintFacet is Modifiers {
     using DoubleEndedQueue for DoubleEndedQueue.Bytes32Deque;
 
+    event NftMint(
+        uint256 indexed id1,
+        uint256 indexed id2,
+        uint256 indexed newId
+    );
+
+    event NftPurchase(
+        address indexed owner,
+        uint256 indexed nftId
+    );
+
     function getUseCount(uint256 id_) external view returns (uint256) {
         return s.useCount[id_];
     }
@@ -61,7 +72,7 @@ contract MintFacet is Modifiers {
         uint256 id1_,
         address rev2_,
         uint256 id2_
-    ) external onlyRewardManager returns (uint256 newId) {
+    ) external onlyRewardManager {
         require(rev1_ != rev2_, "MintFacet: rev1 and rev2 should be different");
         require(address(0) != rev1_, "MintFacet: rev1 invalid address");
         require(address(0) != rev2_, "MintFacet: rev2 invalid address");
@@ -76,7 +87,7 @@ contract MintFacet is Modifiers {
             "MintFacet: pairing limit reached for these nfts"
         );
 
-        newId = makePairedNft(rev1_, rev2_);
+        uint256 newId = makePairedNft(rev1_, rev2_);
 
         incUseCount(rev1_, id1_);
         incUseCount(rev2_, id2_);
@@ -84,6 +95,8 @@ contract MintFacet is Modifiers {
         s.lastUsedTime[id1_] = block.timestamp;
         s.lastUsedTime[id2_] = block.timestamp;
         s.pairUsedCount[key] += 1;
+
+        emit NftMint(id1_, id2_, newId);
     }
 
     function keyForIdsPair(
@@ -118,7 +131,7 @@ contract MintFacet is Modifiers {
         }
     }
 
-    function purchaseNft() external returns (uint256 nftId) {
+    function purchaseNft() external {
         require(
             s.idsQueue.length() > 0,
             "MintFacet: Minted nfts queue is empty"
@@ -134,7 +147,7 @@ contract MintFacet is Modifiers {
         );
 
         _squeezeQueue();
-        nftId = uint256(s.idsQueue.popFront());
+        uint256 nftId = uint256(s.idsQueue.popFront());
         LibNftPairing.transfer(address(this), msg.sender, nftId);
 
         IERC20(s.paymentToken).transferFrom(
@@ -156,6 +169,7 @@ contract MintFacet is Modifiers {
         );
 
         delete s.nftRevenues[nftId];
+        emit NftPurchase(msg.sender, nftId);
     }
 
     function _squeezeQueue() internal {
