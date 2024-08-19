@@ -61,19 +61,23 @@ contract MintFacet is Modifiers {
         );
         require(success, "Token transfer failed");
 
-        success = IERC20(s.paymentToken).transferFrom(
-            buyer,
-            s.nftRevenues[id][0],
-            (s.nftBuyPrice / 100) * 40
-        );
-        require(success, "Token transfer failed");
+        if (buyer != s.nftRevenues[id][0]) {
+            success = IERC20(s.paymentToken).transferFrom(
+                buyer,
+                s.nftRevenues[id][0],
+                (s.nftBuyPrice / 100) * 40
+            );
+            require(success, "Token transfer failed");
+        }
 
-        success = IERC20(s.paymentToken).transferFrom(
-            buyer,
-            s.nftRevenues[id][1],
-            (s.nftBuyPrice / 100) * 40
-        );
-        require(success, "Token transfer failed");
+        if (buyer != s.nftRevenues[id][1]) {
+            success = IERC20(s.paymentToken).transferFrom(
+                buyer,
+                s.nftRevenues[id][1],
+                (s.nftBuyPrice / 100) * 40
+            );
+            require(success, "Token transfer failed");
+        }
 
         LibDemNft.transfer(s.rewardManager, buyer, id);
     }
