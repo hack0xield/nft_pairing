@@ -16,10 +16,7 @@ contract MintFacet is Modifiers {
         uint256 indexed newId
     );
 
-    event NftPurchase(
-        address indexed owner,
-        uint256 indexed nftId
-    );
+    event NftPurchase(address indexed owner, uint256 indexed nftId);
 
     function getUseCount(uint256 id_) external view returns (uint256) {
         return s.useCount[id_];
@@ -150,23 +147,29 @@ contract MintFacet is Modifiers {
         uint256 nftId = uint256(s.idsQueue.popFront());
         LibNftPairing.transfer(address(this), msg.sender, nftId);
 
-        IERC20(s.paymentToken).transferFrom(
-            msg.sender,
-            s.rewardManager,
-            (s.nftBuyPrice / 100) * 20
-        );
+        if (msg.sender != s.rewardManager) {
+            IERC20(s.paymentToken).transferFrom(
+                msg.sender,
+                s.rewardManager,
+                (s.nftBuyPrice / 100) * 20
+            );
+        }
 
-        IERC20(s.paymentToken).transferFrom(
-            msg.sender,
-            s.nftRevenues[nftId][0],
-            (s.nftBuyPrice / 100) * 40
-        );
+        if (msg.sender != s.nftRevenues[nftId][0]) {
+            IERC20(s.paymentToken).transferFrom(
+                msg.sender,
+                s.nftRevenues[nftId][0],
+                (s.nftBuyPrice / 100) * 40
+            );
+        }
 
-        IERC20(s.paymentToken).transferFrom(
-            msg.sender,
-            s.nftRevenues[nftId][1],
-            (s.nftBuyPrice / 100) * 40
-        );
+        if (msg.sender != s.nftRevenues[nftId][1]) {
+            IERC20(s.paymentToken).transferFrom(
+                msg.sender,
+                s.nftRevenues[nftId][1],
+                (s.nftBuyPrice / 100) * 40
+            );
+        }
 
         delete s.nftRevenues[nftId];
         emit NftPurchase(msg.sender, nftId);

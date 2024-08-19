@@ -37,7 +37,8 @@ const facets = [
     }
 ];
 
-const diamondAddress = "0x7614C32D4427FFd5D2e42827bC213fD8D6aA9E6A";
+//const diamondAddress = "0x7614C32D4427FFd5D2e42827bC213fD8D6aA9E6A";
+const diamondAddress = "0x8e58e31cc05853dAEe60fB7372a8103E294B56Bb";
 //const diamondAddress = "";
 
 const FacetCutAction = {
