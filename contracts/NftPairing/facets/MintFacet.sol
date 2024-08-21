@@ -3,6 +3,8 @@ pragma solidity 0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import {Modifiers} from "../libraries/LibAppStorage.sol";
 import {LibNftPairing} from "../libraries/LibNftPairing.sol";
@@ -26,7 +28,7 @@ contract MintFacet is Modifiers {
         uint256 id1_,
         uint256 id2_
     ) external view returns (uint256) {
-        bytes32 key = keyForIdsPair(id1_, id2_);
+        bytes32 key = _keyForIdsPair(id1_, id2_);
         return s.pairUsedCount[key];
     }
 
@@ -78,16 +80,16 @@ contract MintFacet is Modifiers {
         require(isInCd(id1_) == false, "MintFacet: id1 Nft is in cooldown");
         require(isInCd(id2_) == false, "MintFacet: id2 Nft is in cooldown");
 
-        bytes32 key = keyForIdsPair(id1_, id2_);
+        bytes32 key = _keyForIdsPair(id1_, id2_);
         require(
             s.pairUsedCount[key] < s.pairingLimit,
             "MintFacet: pairing limit reached for these nfts"
         );
 
-        uint256 newId = makePairedNft(rev1_, rev2_);
+        uint256 newId = _makePairedNft(rev1_, rev2_);
 
-        incUseCount(rev1_, id1_);
-        incUseCount(rev2_, id2_);
+        _incUseCount(rev1_, id1_);
+        _incUseCount(rev2_, id2_);
 
         s.lastUsedTime[id1_] = block.timestamp;
         s.lastUsedTime[id2_] = block.timestamp;
@@ -96,7 +98,7 @@ contract MintFacet is Modifiers {
         emit NftMint(id1_, id2_, newId);
     }
 
-    function keyForIdsPair(
+    function _keyForIdsPair(
         uint256 id1_,
         uint256 id2_
     ) internal pure returns (bytes32) {
@@ -107,7 +109,7 @@ contract MintFacet is Modifiers {
         return keccak256(abi.encodePacked(elem1, elem2));
     }
 
-    function makePairedNft(
+    function _makePairedNft(
         address rev1_,
         address rev2_
     ) internal returns (uint256 newId) {
@@ -120,7 +122,7 @@ contract MintFacet is Modifiers {
         s.idsQueue.pushBack(bytes32(newId));
     }
 
-    function incUseCount(address rev_, uint256 id_) internal {
+    function _incUseCount(address rev_, uint256 id_) internal {
         s.useCount[id_] += 1;
         if (s.useCount[id_] >= s.maxUseCount) {
             LibNftPairing.transfer(rev_, address(0), id_); //burn
@@ -133,6 +135,32 @@ contract MintFacet is Modifiers {
             s.idsQueue.length() > 0,
             "MintFacet: Minted nfts queue is empty"
         );
+        _checkPurchaserBalance();
+
+        _squeezeQueue();
+        uint256 nftId = uint256(s.idsQueue.popFront());
+        _purchaseNft(nftId);
+    }
+
+    function purchaseRefNft(uint256 id_, bytes calldata signature_) external {
+        require(
+            s.owners[id_] == address(this),
+            "MintFacet: this NFT already purchased"
+        );
+        _checkPurchaserBalance();
+
+        bytes32 hash = MessageHashUtils.toEthSignedMessageHash(
+            keccak256(abi.encodePacked(msg.sender, id_))
+        );
+        require(
+            s.rewardManager == ECDSA.recover(hash, signature_),
+            "MintFacet: Sig validation failed"
+        );
+
+        _purchaseNft(id_);
+    }
+
+    function _checkPurchaserBalance() internal view {
         require(
             IERC20(s.paymentToken).balanceOf(msg.sender) >= s.nftBuyPrice,
             "MintFacet: Insufficient sender balance"
@@ -142,9 +170,9 @@ contract MintFacet is Modifiers {
                 s.nftBuyPrice,
             "MintFacet: Insufficient allowance for payment token"
         );
+    }
 
-        _squeezeQueue();
-        uint256 nftId = uint256(s.idsQueue.popFront());
+    function _purchaseNft(uint256 nftId) internal {
         LibNftPairing.transfer(address(this), msg.sender, nftId);
 
         if (msg.sender != s.rewardManager) {
@@ -154,7 +182,6 @@ contract MintFacet is Modifiers {
                 (s.nftBuyPrice / 100) * 20
             );
         }
-
         if (msg.sender != s.nftRevenues[nftId][0]) {
             IERC20(s.paymentToken).transferFrom(
                 msg.sender,
@@ -162,7 +189,6 @@ contract MintFacet is Modifiers {
                 (s.nftBuyPrice / 100) * 40
             );
         }
-
         if (msg.sender != s.nftRevenues[nftId][1]) {
             IERC20(s.paymentToken).transferFrom(
                 msg.sender,

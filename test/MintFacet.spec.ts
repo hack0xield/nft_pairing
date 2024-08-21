@@ -27,6 +27,7 @@ describe("MintFacet Test", async () => {
   let id1;
   let id2;
   let id3;
+  let id4;
 
   let tx;
 
@@ -45,6 +46,7 @@ describe("MintFacet Test", async () => {
     id1 = 0;
     id2 = 1;
     id3 = 2;
+    id4 = 3;
 
     mintFacet = await ethers.getContractAt(
       "MintFacet",
@@ -147,5 +149,25 @@ describe("MintFacet Test", async () => {
     expect(await paymentToken.balanceOf(rewardManager)).to.be.equal(
       (testCfg.NftBuyPrice / 100n) * 20n,
     );
+  });
+
+  it("purchaseRefNft Test", async () => {
+    tx = await mintFacet.connect(rewardManager).mint(user1, id3, user2, id2); //Successful
+    await expect(tx).to.emit(mintFacet, "NftMint").withArgs(id3, id2, id4);
+
+    const address = await user2.getAddress();
+    const msg = ethers.solidityPackedKeccak256(
+      ["address", "uint256"],
+      [address, id4],
+    );
+    const sig1 = await rewardManager.provider.send("eth_sign", [
+      rewardManagerAddr,
+      msg,
+    ]);
+
+    await paymentToken.connect(user2).mint(testCfg.NftBuyPrice);
+    await paymentToken.connect(user2).approve(nftAddress, testCfg.NftBuyPrice);
+    tx = await mintFacet.connect(user2).purchaseRefNft(id4, sig1);
+    await expect(tx).to.emit(mintFacet, "NftPurchase").withArgs(user2, id4);
   });
 });
