@@ -62,9 +62,9 @@ contract MintFacet is Modifiers {
         LibNftPairing.mint(nftCount_, s.rewardManager);
     }
 
-    function squeezeQueue() external onlyRewardManager {
-        _squeezeQueue();
-    }
+//    function squeezeQueue() external onlyRewardManager {
+//        _squeezeQueue();
+//    }
 
     function mint(
         address rev1_,
@@ -137,28 +137,28 @@ contract MintFacet is Modifiers {
         );
         _checkPurchaserBalance();
 
-        _squeezeQueue();
+        //_squeezeQueue();
         uint256 nftId = uint256(s.idsQueue.popFront());
         _purchaseNft(nftId);
     }
 
-    function purchaseRefNft(uint256 id_, bytes calldata signature_) external {
-        require(
-            s.owners[id_] == address(this),
-            "MintFacet: this NFT already purchased"
-        );
-        _checkPurchaserBalance();
-
-        bytes32 hash = MessageHashUtils.toEthSignedMessageHash(
-            keccak256(abi.encodePacked(msg.sender, id_))
-        );
-        require(
-            s.rewardManager == ECDSA.recover(hash, signature_),
-            "MintFacet: Sig validation failed"
-        );
-
-        _purchaseNft(id_);
-    }
+//    function purchaseRefNft(uint256 id_, bytes calldata signature_) external {
+//        require(
+//            s.owners[id_] == address(this),
+//            "MintFacet: this NFT already purchased"
+//        );
+//        _checkPurchaserBalance();
+//
+//        bytes32 hash = MessageHashUtils.toEthSignedMessageHash(
+//            keccak256(abi.encodePacked(msg.sender, id_))
+//        );
+//        require(
+//            s.rewardManager == ECDSA.recover(hash, signature_),
+//            "MintFacet: Sig validation failed"
+//        );
+//
+//        _purchaseNft(id_);
+//    }
 
     function _checkPurchaserBalance() internal view {
         require(
@@ -201,13 +201,13 @@ contract MintFacet is Modifiers {
         emit NftPurchase(msg.sender, nftId);
     }
 
-    function _squeezeQueue() internal {
-        while (s.idsQueue.length() > 0) {
-            uint256 id = uint256(s.idsQueue.front());
-            if (s.owners[id] == address(this)) {
-                return;
-            }
-            s.idsQueue.popFront();
-        }
-    }
+//    function _squeezeQueue() internal {
+//        while (s.idsQueue.length() > 0) {
+//            uint256 id = uint256(s.idsQueue.front());
+//            if (s.owners[id] == address(this)) {
+//                return;
+//            }
+//            s.idsQueue.popFront();
+//        }
+//    }
 }

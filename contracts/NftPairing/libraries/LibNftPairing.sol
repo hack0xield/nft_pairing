@@ -54,49 +54,44 @@ library LibNftPairing {
         address oldOwner = s.owners[tokenId_];
         s.owners[tokenId_] = newOwner_;
 
-        if (oldOwner != address(0)) {
-            unchecked {
-                s.balances[oldOwner] -= 1;
-            }
+        if (oldOwner != address(0) && oldOwner != address(this)) {
+            //            unchecked {
+            //                s.balances[oldOwner] -= 1;
+            //            }
+            removeIndex(tokenId_, oldOwner);
         }
-        if (newOwner_ != address(0)) {
-            unchecked {
-                s.balances[newOwner_] += 1;
-            }
+        if (newOwner_ != address(0) && newOwner_ != address(this)) {
+            //            unchecked {
+            //                s.balances[newOwner_] += 1;
+            //            }
+            addIndex(tokenId_, newOwner_);
         }
-
-        //removeIndex(tokenId_, oldOwner);
-        //addIndex(tokenId_, newOwner_);
 
         emit LibERC721.Transfer(oldOwner, newOwner_, tokenId_);
     }
 
-    /*function removeIndex(uint256 tokenId_, address from_) internal {
-        if (from_ != address(0)) {
-            AppStorage storage s = LibAppStorage.diamondStorage();
-            uint256[] storage ownerTokenIdsFrom = s.ownerTokenIds[from_];
-            mapping(uint256 => uint256) storage ownerTokenIdIndexesFrom = s
-                .ownerTokenIdIndexes[from_];
+    function removeIndex(uint256 tokenId_, address from_) internal {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256[] storage ownerTokenIdsFrom = s.ownerTokenIds[from_];
+        mapping(uint256 => uint256) storage ownerTokenIdIndexesFrom = s
+            .ownerTokenIdIndexes[from_];
 
-            uint256 index = ownerTokenIdIndexesFrom[tokenId_];
-            uint256 lastIndex = ownerTokenIdsFrom.length - 1;
-            if (index != lastIndex) {
-                uint256 lastTokenId = ownerTokenIdsFrom[lastIndex];
-                ownerTokenIdsFrom[index] = lastTokenId;
-                ownerTokenIdIndexesFrom[lastTokenId] = index;
-            }
-            ownerTokenIdsFrom.pop();
-            delete ownerTokenIdIndexesFrom[tokenId_];
+        uint256 index = ownerTokenIdIndexesFrom[tokenId_];
+        uint256 lastIndex = ownerTokenIdsFrom.length - 1;
+        if (index != lastIndex) {
+            uint256 lastTokenId = ownerTokenIdsFrom[lastIndex];
+            ownerTokenIdsFrom[index] = lastTokenId;
+            ownerTokenIdIndexesFrom[lastTokenId] = index;
         }
+        ownerTokenIdsFrom.pop();
+        delete ownerTokenIdIndexesFrom[tokenId_];
     }
 
     function addIndex(uint256 tokenId_, address to_) internal {
-        if (to_ != address(0)) {
-            AppStorage storage s = LibAppStorage.diamondStorage();
-            uint256[] storage ownerTokenIds = s.ownerTokenIds[to_];
+        AppStorage storage s = LibAppStorage.diamondStorage();
+        uint256[] storage ownerTokenIds = s.ownerTokenIds[to_];
 
-            s.ownerTokenIdIndexes[to_][tokenId_] = ownerTokenIds.length;
-            ownerTokenIds.push(tokenId_);
-        }
-    }*/
+        s.ownerTokenIdIndexes[to_][tokenId_] = ownerTokenIds.length;
+        ownerTokenIds.push(tokenId_);
+    }
 }

@@ -14,9 +14,9 @@ import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEnde
 
     //Indexes
     mapping(uint256 => address) owners;
-    mapping(address => uint256) balances;
-    //mapping(address => uint256[]) ownerTokenIds;
-    //mapping(address => mapping(uint256 => uint256)) ownerTokenIdIndexes;
+    //mapping(address => uint256) balances;
+    mapping(address => uint256[]) ownerTokenIds;
+    mapping(address => mapping(uint256 => uint256)) ownerTokenIdIndexes;
     uint256 tokenIdsCount;
 
     //Approval

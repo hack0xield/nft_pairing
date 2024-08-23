@@ -39,8 +39,8 @@ contract NftToken is Modifiers {
     /// @param owner_ An address for whom to query the balance
     /// @return The number of NFTs owned by `_owner`, possibly zero
     function balanceOf(address owner_) external view returns (uint256) {
-        return s.balances[owner_];
-        //return s.ownerTokenIds[owner_].length;
+        //return s.balances[owner_];
+        return s.ownerTokenIds[owner_].length;
     }
 
     /// @notice Enumerate valid NFTs
@@ -63,25 +63,25 @@ contract NftToken is Modifiers {
     /// @param index_ A counter less than `balanceOf(owner_)`
     /// @return The token identifier for the `index_`th NFT assigned to `owner_`,
     ///   (sort order not specified)
-//    function tokenOfOwnerByIndex(
-//        address owner_,
-//        uint256 index_
-//    ) external view returns (uint256) {
-//        require(
-//            index_ < s.ownerTokenIds[owner_].length,
-//            "NftToken: index beyond owner balance"
-//        );
-//        return s.ownerTokenIds[owner_][index_];
-//    }
+    function tokenOfOwnerByIndex(
+        address owner_,
+        uint256 index_
+    ) external view returns (uint256) {
+        require(
+            index_ < s.ownerTokenIds[owner_].length,
+            "NftToken: index beyond owner balance"
+        );
+        return s.ownerTokenIds[owner_][index_];
+    }
 
     /// @notice Get all the Ids of NFTs owned by an address
     /// @param owner_ The address to check for the NFTs
     /// @return an array of tokenId for each NFT
-//    function tokenIdsOfOwner(
-//        address owner_
-//    ) external view returns (uint256[] memory) {
-//        return s.ownerTokenIds[owner_];
-//    }
+    function tokenIdsOfOwner(
+        address owner_
+    ) external view returns (uint256[] memory) {
+        return s.ownerTokenIds[owner_];
+    }
 
     /// @notice Find the owner of an NFT
     /// @param tokenId_ The identifier for an NFT
