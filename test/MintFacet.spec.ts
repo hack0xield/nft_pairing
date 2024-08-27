@@ -130,8 +130,8 @@ describe("MintFacet Test", async () => {
     let balanceAfter2 = await ethers.provider.getBalance(user2);
     let balanceAfterContract = await ethers.provider.getBalance(nftAddress);
 
-    expect(balanceAfter1 - balanceBefore1).closeTo(
-      (testCfg.NftBuyPrice / 100n) * 40n,
+    expect(balanceBefore1 - balanceAfter1).closeTo( //user1 has less than before
+      (testCfg.NftBuyPrice / 100n) * 60n, //user1 spent 100% but regain 40, 100-40=60
       ethers.parseEther("0.001"),
     );
     expect(balanceAfter2 - balanceBefore2).closeTo(

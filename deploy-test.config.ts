@@ -9,7 +9,7 @@ export let deployConfig = {
     RewardMgrInitNfts: 2,
 
     MaxNftUseCount: 5,
-    NftBuyPrice: ethers.parseEther("0.0001"),
+    NftBuyPrice: ethers.parseEther("0.1"),
     nftCdSec: 180,
     pairingLimit: 1,
 }
