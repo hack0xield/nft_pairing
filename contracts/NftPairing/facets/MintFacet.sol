@@ -167,24 +167,33 @@ contract MintFacet is Modifiers {
         }
     }
 
-    function purchaseNft() external {
+    function purchaseNft() external payable {
         require(
             s.idsQueue.length() > 0,
             "MintFacet: Minted nfts queue is empty"
         );
-        _checkPurchaserBalance();
+        require(
+            s.nftBuyPrice <= msg.value,
+            "MintFacet: Insufficient ethers value"
+        );
 
         _squeezeQueue();
         uint256 nftId = uint256(s.idsQueue.popFront());
         _purchaseNft(nftId);
     }
 
-    function purchaseRefNft(uint256 id_, bytes calldata signature_) external {
+    function purchaseRefNft(
+        uint256 id_,
+        bytes calldata signature_
+    ) external payable {
         require(
             s.owners[id_] == address(this),
             "MintFacet: this NFT already purchased"
         );
-        _checkPurchaserBalance();
+        require(
+            s.nftBuyPrice <= msg.value,
+            "MintFacet: Insufficient ethers value"
+        );
 
         bytes32 hash = MessageHashUtils.toEthSignedMessageHash(
             keccak256(abi.encodePacked(msg.sender, id_))
@@ -197,42 +206,18 @@ contract MintFacet is Modifiers {
         _purchaseNft(id_);
     }
 
-    function _checkPurchaserBalance() internal view {
-        require(
-            IERC20(s.paymentToken).balanceOf(msg.sender) >= s.nftBuyPrice,
-            "MintFacet: Insufficient sender balance"
-        );
-        require(
-            IERC20(s.paymentToken).allowance(msg.sender, address(this)) >=
-                s.nftBuyPrice,
-            "MintFacet: Insufficient allowance for payment token"
-        );
-    }
-
     function _purchaseNft(uint256 nftId) internal {
         LibNftPairing.transfer(address(this), msg.sender, nftId);
 
-        if (msg.sender != s.rewardManager) {
-            IERC20(s.paymentToken).transferFrom(
-                msg.sender,
-                s.rewardManager,
-                (s.nftBuyPrice / 100) * 20
-            );
-        }
-        if (msg.sender != s.nftRevenues[nftId][0]) {
-            IERC20(s.paymentToken).transferFrom(
-                msg.sender,
-                s.nftRevenues[nftId][0],
-                (s.nftBuyPrice / 100) * 40
-            );
-        }
-        if (msg.sender != s.nftRevenues[nftId][1]) {
-            IERC20(s.paymentToken).transferFrom(
-                msg.sender,
-                s.nftRevenues[nftId][1],
-                (s.nftBuyPrice / 100) * 40
-            );
-        }
+        (bool success, ) = s.nftRevenues[nftId][0].call{
+            value: (s.nftBuyPrice / 100) * 40
+        }("");
+        require(success, "MintFacet: rev 0 call failed");
+
+        (success, ) = s.nftRevenues[nftId][1].call{
+            value: (s.nftBuyPrice / 100) * 40
+        }("");
+        require(success, "MintFacet: rev 1 call failed");
 
         delete s.nftRevenues[nftId];
         emit NftPurchase(msg.sender, nftId);
@@ -246,5 +231,11 @@ contract MintFacet is Modifiers {
             }
             s.idsQueue.popFront();
         }
+    }
+
+    function withdraw() external onlyRewardManager {
+        uint256 balance = address(this).balance;
+        (bool success, ) = msg.sender.call{value: balance}("");
+        require(success, "MintFacet: Withdraw failed");
     }
 }

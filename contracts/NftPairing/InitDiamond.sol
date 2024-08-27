@@ -24,8 +24,6 @@ contract InitDiamond {
         uint256 nftBuyPrice;
         uint256 nftCdSec;
         uint256 pairingLimit;
-        //uint256 pairingChance;
-        address paymentToken;
     }
 
     function init(Args memory args_) external {
@@ -47,7 +45,5 @@ contract InitDiamond {
         s.nftBuyPrice = args_.nftBuyPrice;
         s.nftCdSec = args_.nftCdSec;
         s.pairingLimit = args_.pairingLimit;
-        //s.pairingChance = args_.pairingChance;
-        s.paymentToken = args_.paymentToken;
     }
 }

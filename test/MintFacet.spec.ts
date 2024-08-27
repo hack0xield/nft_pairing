@@ -13,14 +13,12 @@ import * as utils from "../scripts/deploy";
 describe("MintFacet Test", async () => {
   let mintFacet: Contract;
   let nftToken: Contract;
-  let paymentToken: Contract;
 
   let accounts: Signer[];
   let rewardManager;
   let rewardManagerAddr;
 
   let nftAddress: string;
-  let paymentTokenAddress: string;
 
   let user1;
   let user2;
@@ -35,7 +33,6 @@ describe("MintFacet Test", async () => {
     const gas = { totalGasUsed: 0n };
     let contracts = await utils.main(true, gas);
     nftAddress = contracts[0];
-    paymentTokenAddress = contracts[1];
 
     accounts = await ethers.getSigners();
     rewardManager = accounts[1];
@@ -54,11 +51,6 @@ describe("MintFacet Test", async () => {
       accounts[0],
     );
     nftToken = await ethers.getContractAt("NftToken", nftAddress, accounts[0]);
-    paymentToken = await ethers.getContractAt(
-      "PaymentERC20",
-      paymentTokenAddress,
-      accounts[0],
-    );
   });
 
   it("Mint Initial", async () => {
@@ -120,34 +112,35 @@ describe("MintFacet Test", async () => {
   });
 
   it("purchaseNft Test", async () => {
-    tx = mintFacet.connect(user1).purchaseNft();
-    await expect(tx).to.be.revertedWith(
-      "MintFacet: Insufficient sender balance",
-    );
+    let balanceBefore1 = await ethers.provider.getBalance(user1);
+    let balanceBefore2 = await ethers.provider.getBalance(user2);
+    let balanceBeforeContract = await ethers.provider.getBalance(nftAddress);
 
-    await paymentToken.connect(user1).mint(testCfg.NftBuyPrice);
-
-    tx = mintFacet.connect(user1).purchaseNft();
-    await expect(tx).to.be.revertedWith(
-      "MintFacet: Insufficient allowance for payment token",
-    );
-
-    await paymentToken.connect(user1).approve(nftAddress, testCfg.NftBuyPrice);
-    tx = await mintFacet.connect(user1).purchaseNft(); //Successful
+    tx = await mintFacet
+      .connect(user1)
+      .purchaseNft({ value: testCfg.NftBuyPrice }); //Successful
     await expect(tx).to.emit(mintFacet, "NftPurchase").withArgs(user1, id3);
 
     tx = mintFacet.getNextIdInQueue();
     await expect(tx).to.be.revertedWithCustomError(mintFacet, "QueueEmpty()");
 
     expect(await nftToken.balanceOf(user1)).to.be.equal(2);
-    expect(await paymentToken.balanceOf(user1)).to.be.equal(
+
+    let balanceAfter1 = await ethers.provider.getBalance(user1);
+    let balanceAfter2 = await ethers.provider.getBalance(user2);
+    let balanceAfterContract = await ethers.provider.getBalance(nftAddress);
+
+    expect(balanceAfter1 - balanceBefore1).closeTo(
       (testCfg.NftBuyPrice / 100n) * 40n,
+      ethers.parseEther("0.001"),
     );
-    expect(await paymentToken.balanceOf(user2)).to.be.equal(
+    expect(balanceAfter2 - balanceBefore2).closeTo(
       (testCfg.NftBuyPrice / 100n) * 40n,
+      ethers.parseEther("0.001"),
     );
-    expect(await paymentToken.balanceOf(rewardManager)).to.be.equal(
+    expect(balanceAfterContract - balanceBeforeContract).closeTo(
       (testCfg.NftBuyPrice / 100n) * 20n,
+      ethers.parseEther("0.001"),
     );
   });
 
@@ -165,9 +158,9 @@ describe("MintFacet Test", async () => {
       msg,
     ]);
 
-    await paymentToken.connect(user2).mint(testCfg.NftBuyPrice);
-    await paymentToken.connect(user2).approve(nftAddress, testCfg.NftBuyPrice);
-    tx = await mintFacet.connect(user2).purchaseRefNft(id4, sig1);
+    tx = await mintFacet.connect(user2).purchaseRefNft(id4, sig1, {
+      value: testCfg.NftBuyPrice,
+    });
     await expect(tx).to.emit(mintFacet, "NftPurchase").withArgs(user2, id4);
   });
 });

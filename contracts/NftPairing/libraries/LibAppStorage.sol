@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 import {LibDiamond} from "../../shared/diamond/lib/LibDiamond.sol";
 import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol";
 
-    struct AppStorage {
+struct AppStorage {
     string name;
     string symbol;
     string baseURI;
@@ -28,8 +28,6 @@ import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEnde
     uint256 nftBuyPrice;
     uint256 nftCdSec;
     uint256 pairingLimit;
-    //uint256 pairingChance;
-    address paymentToken;
 
     mapping(uint256 => uint256) useCount;
     mapping(uint256 => uint256) lastUsedTime;

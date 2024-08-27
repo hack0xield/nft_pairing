@@ -28,34 +28,17 @@ export async function main(
     : cfg.RewardMgr;
 
   let nftAddress;
-  let paymentToken;
   await deployNft();
 
   LOG(`> Total gas used: ${strDisplay(gas.totalGasUsed)}`);
 
-  return [nftAddress, paymentToken];
+  return [nftAddress];
 
   async function deployNft() {
     const [nftTokenArgs, mintFacetArgs] = await infra.deployFacets(
       "NftToken",
       "MintFacet",
     );
-
-    paymentToken = cfg.PaymentToken;
-    if (tests == true) {
-      const contract = await (
-        await ethers.getContractFactory("PaymentERC20")
-      ).deploy();
-      await contract.waitForDeployment();
-      const receipt = await contract.deploymentTransaction().wait();
-      paymentToken = receipt.contractAddress;
-
-      LOG(`>> Test PaymentToken address: ${paymentToken}`);
-      LOG(
-        `>> Test PaymentToken deploy gas used: ${strDisplay(receipt.gasUsed)}`,
-      );
-      gas.totalGasUsed += receipt.gasUsed;
-    }
 
     nftAddress = await infra.deployDiamond(
       "NftPairing",
@@ -71,8 +54,6 @@ export async function main(
           cfg.NftBuyPrice,
           cfg.nftCdSec,
           cfg.pairingLimit,
-          //cfg.pairingChance,
-          paymentToken,
         ],
       ],
     );
