@@ -72,19 +72,7 @@ contract MintFacet is Modifiers {
         address rev2_,
         uint256 id2_
     ) external onlyRewardManager {
-        require(rev1_ != rev2_, "MintFacet: rev1 and rev2 should be different");
-        require(address(0) != rev1_, "MintFacet: rev1 invalid address");
-        require(address(0) != rev2_, "MintFacet: rev2 invalid address");
-        require(s.owners[id1_] == rev1_, "MintFacet: rev1 is not owner of id1");
-        require(s.owners[id2_] == rev2_, "MintFacet: rev2 is not owner of id2");
-        require(isInCd(id1_) == false, "MintFacet: id1 Nft is in cooldown");
-        require(isInCd(id2_) == false, "MintFacet: id2 Nft is in cooldown");
-
-        bytes32 key = _keyForIdsPair(id1_, id2_);
-        require(
-            s.pairUsedCount[key] < s.pairingLimit,
-            "MintFacet: pairing limit reached for these nfts"
-        );
+        bytes32 pairKey = _checkMintAllowness(rev1_, id1_, rev2_, id2_);
 
         uint256 newId = _makePairedNft(rev1_, rev2_);
 
@@ -93,9 +81,42 @@ contract MintFacet is Modifiers {
 
         s.lastUsedTime[id1_] = block.timestamp;
         s.lastUsedTime[id2_] = block.timestamp;
-        s.pairUsedCount[key] += 1;
+        s.pairUsedCount[pairKey] += 1;
 
         emit NftMint(id1_, id2_, newId);
+    }
+
+    function mintIdle(
+        address rev1_,
+        uint256 id1_,
+        address rev2_,
+        uint256 id2_
+    ) external onlyRewardManager {
+        _checkMintAllowness(rev1_, id1_, rev2_, id2_);
+
+        s.lastUsedTime[id1_] = block.timestamp;
+        s.lastUsedTime[id2_] = block.timestamp;
+    }
+
+    function _checkMintAllowness(
+        address rev1_,
+        uint256 id1_,
+        address rev2_,
+        uint256 id2_
+    ) internal view returns (bytes32 key) {
+        require(rev1_ != rev2_, "MintFacet: rev1 and rev2 should be different");
+        require(address(0) != rev1_, "MintFacet: rev1 invalid address");
+        require(address(0) != rev2_, "MintFacet: rev2 invalid address");
+        require(s.owners[id1_] == rev1_, "MintFacet: rev1 is not owner of id1");
+        require(s.owners[id2_] == rev2_, "MintFacet: rev2 is not owner of id2");
+        require(isInCd(id1_) == false, "MintFacet: id1 Nft is in cooldown");
+        require(isInCd(id2_) == false, "MintFacet: id2 Nft is in cooldown");
+
+        key = _keyForIdsPair(id1_, id2_);
+        require(
+            s.pairUsedCount[key] < s.pairingLimit,
+            "MintFacet: pairing limit reached for these nfts"
+        );
     }
 
     function _keyForIdsPair(
