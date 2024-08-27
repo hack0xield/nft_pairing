@@ -62,6 +62,22 @@ contract MintFacet is Modifiers {
         LibNftPairing.mint(nftCount_, s.rewardManager);
     }
 
+    function setNftMaxUseCount(uint256 limit_) external onlyRewardManager {
+        s.maxUseCount = limit_;
+    }
+
+    function setNftBuyPrice(uint256 price_) external onlyRewardManager {
+        s.nftBuyPrice = price_;
+    }
+
+    function setMintCdSec(uint256 cdSec_) external onlyRewardManager {
+        s.nftCdSec = cdSec_;
+    }
+
+    function setPairingLimit(uint256 limit_) external onlyRewardManager {
+        s.pairingLimit = limit_;
+    }
+
     function squeezeQueue() external onlyRewardManager {
         _squeezeQueue();
     }
