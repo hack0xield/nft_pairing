@@ -78,6 +78,10 @@ contract MintFacet is Modifiers {
         s.pairingLimit = limit_;
     }
 
+    function setLastUsedTime(uint256 id_, uint256 time_) external onlyRewardManager {
+        s.lastUsedTime[id_] = time_;
+    }
+
     function squeezeQueue() external onlyRewardManager {
         _squeezeQueue();
     }
