@@ -50,6 +50,13 @@ const config: HardhatUserConfig = {
       accounts: [privateKey],
       gasPrice: 10000,
     },
+    sepolia: {
+      //url: "https://sepolia.infura.io/v3/" + infuraKey,
+      //url: "https://rpc2.sepolia.org",
+      url: "https://1rpc.io/sepolia",
+      accounts: [privateKey],
+      gasPrice: 80000000000,
+    },
   },
   solidity: {
     compilers: [

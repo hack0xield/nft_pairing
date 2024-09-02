@@ -1,4 +1,5 @@
 node_modules
+.etherscan
 .secret
 .infura
 .solhint.json

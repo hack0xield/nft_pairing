@@ -13,5 +13,5 @@ export let deployConfig = {
     nftCdSec: 180,
     pairingLimit: 1,
     pairingChance: 50,
-    PaymentToken: "0x4200000000000000000000000000000000000022"
+    PaymentToken: "0x7f11f79DEA8CE904ed0249a23930f2e59b43a385"
 }
