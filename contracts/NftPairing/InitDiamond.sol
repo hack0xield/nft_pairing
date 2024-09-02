@@ -22,7 +22,8 @@ contract InitDiamond {
 
         uint256 maxUseCount;
         uint256 nftBuyPrice;
-        address paymentToken;
+        uint256 nftCdSec;
+        uint256 pairingLimit;
     }
 
     function init(Args memory args_) external {
@@ -42,6 +43,7 @@ contract InitDiamond {
 
         s.maxUseCount = args_.maxUseCount;
         s.nftBuyPrice = args_.nftBuyPrice;
-        s.paymentToken = args_.paymentToken;
+        s.nftCdSec = args_.nftCdSec;
+        s.pairingLimit = args_.pairingLimit;
     }
 }

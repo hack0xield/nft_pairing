@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import {LibDiamond} from "../../shared/diamond/lib/LibDiamond.sol";
+import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol";
 
 struct AppStorage {
     string name;
@@ -13,9 +14,9 @@ struct AppStorage {
 
     //Indexes
     mapping(uint256 => address) owners;
-    mapping(address => uint256) balances;
-    //mapping(address => uint256[]) ownerTokenIds;
-    //mapping(address => mapping(uint256 => uint256)) ownerTokenIdIndexes;
+    //mapping(address => uint256) balances;
+    mapping(address => uint256[]) ownerTokenIds;
+    mapping(address => mapping(uint256 => uint256)) ownerTokenIdIndexes;
     uint256 tokenIdsCount;
 
     //Approval
@@ -25,10 +26,14 @@ struct AppStorage {
     // Nft Pairing
     uint256 maxUseCount;
     uint256 nftBuyPrice;
-    mapping(address => uint256) useCount;
-    mapping(uint256 => address[2]) nftRevenues;
+    uint256 nftCdSec;
+    uint256 pairingLimit;
 
-    address paymentToken;
+    mapping(uint256 => uint256) useCount;
+    mapping(uint256 => uint256) lastUsedTime;
+    mapping(bytes32 => uint256) pairUsedCount;
+    mapping(uint256 => address[2]) nftRevenues;
+    DoubleEndedQueue.Bytes32Deque idsQueue;
 }
 
 library LibAppStorage {

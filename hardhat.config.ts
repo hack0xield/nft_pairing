@@ -4,10 +4,13 @@ const fs = require("fs");
 
 const privateKey = fs.readFileSync(".secret").toString("utf-8");
 const infuraKey = fs.readFileSync(".infura").toString("utf-8");
+const etherscan = fs.readFileSync(".etherscan").toString("utf-8");
 
 const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
+      base: [etherscan],
+      baseSepolia: [etherscan],
       blast_sepolia: "blast_sepolia",
       blast: "blast", // apiKey is not required, just set a placeholder
     },
@@ -47,6 +50,16 @@ const config: HardhatUserConfig = {
     },
     blast_sepolia: {
       url: "https://sepolia.blast.io",
+      accounts: [privateKey],
+      gasPrice: 10000,
+    },
+    base: {
+      url: "https://mainnet.base.org",
+      accounts: [privateKey],
+      gasPrice: 1000000000,
+    },
+    base_sepolia: {
+      url: "https://sepolia.base.org",
       accounts: [privateKey],
       gasPrice: 1000000000,
     },

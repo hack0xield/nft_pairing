@@ -2,10 +2,10 @@
 pragma solidity 0.8.20;
 
 import {Modifiers} from "../libraries/LibAppStorage.sol";
-import {LibDemNft} from "../libraries/LibDemNft.sol";
+import {LibNftPairing} from "../libraries/LibNftPairing.sol";
 import {LibERC721} from "../../shared/libraries/LibERC721.sol";
 
-contract DemNft is Modifiers {
+contract NftToken is Modifiers {
     /// @notice Return the universal name of the NFT
     function name() external view returns (string memory) {
         return s.name;
@@ -20,7 +20,7 @@ contract DemNft is Modifiers {
     /// @dev URIs are defined in RFC 3986. The URI may point to a JSON file
     ///  that conforms to the "ERC721 Metadata JSON Schema".
     function tokenURI(uint256 tokenId_) external view returns (string memory) {
-        return LibDemNft.tokenBaseURI(tokenId_);
+        return LibNftPairing.tokenBaseURI(tokenId_);
     }
 
     /// @notice Change base URI of the NFT assets metadata
@@ -39,8 +39,8 @@ contract DemNft is Modifiers {
     /// @param owner_ An address for whom to query the balance
     /// @return The number of NFTs owned by `_owner`, possibly zero
     function balanceOf(address owner_) external view returns (uint256) {
-        return s.balances[owner_];
-        //return s.ownerTokenIds[owner_].length;
+        //return s.balances[owner_];
+        return s.ownerTokenIds[owner_].length;
     }
 
     /// @notice Enumerate valid NFTs
@@ -51,7 +51,7 @@ contract DemNft is Modifiers {
     function tokenByIndex(uint256 index_) external view returns (uint256) {
         require(
             s.owners[index_] != address(0),
-            "DemNft: Nft owner can't be address(0)"
+            "NftToken: Nft owner can't be address(0)"
         );
         return index_;
     }
@@ -63,25 +63,25 @@ contract DemNft is Modifiers {
     /// @param index_ A counter less than `balanceOf(owner_)`
     /// @return The token identifier for the `index_`th NFT assigned to `owner_`,
     ///   (sort order not specified)
-//    function tokenOfOwnerByIndex(
-//        address owner_,
-//        uint256 index_
-//    ) external view returns (uint256) {
-//        require(
-//            index_ < s.ownerTokenIds[owner_].length,
-//            "DemNft: index beyond owner balance"
-//        );
-//        return s.ownerTokenIds[owner_][index_];
-//    }
+    function tokenOfOwnerByIndex(
+        address owner_,
+        uint256 index_
+    ) external view returns (uint256) {
+        require(
+            index_ < s.ownerTokenIds[owner_].length,
+            "NftToken: index beyond owner balance"
+        );
+        return s.ownerTokenIds[owner_][index_];
+    }
 
     /// @notice Get all the Ids of NFTs owned by an address
     /// @param owner_ The address to check for the NFTs
     /// @return an array of tokenId for each NFT
-//    function tokenIdsOfOwner(
-//        address owner_
-//    ) external view returns (uint256[] memory) {
-//        return s.ownerTokenIds[owner_];
-//    }
+    function tokenIdsOfOwner(
+        address owner_
+    ) external view returns (uint256[] memory) {
+        return s.ownerTokenIds[owner_];
+    }
 
     /// @notice Find the owner of an NFT
     /// @param tokenId_ The identifier for an NFT
@@ -95,7 +95,7 @@ contract DemNft is Modifiers {
     /// @param tokenId_ The NFT to find the approved address for
     /// @return The approved address for this NFT, or the zero address if there is none
     function getApproved(uint256 tokenId_) external view returns (address) {
-        require(s.owners[tokenId_] != address(0), "DemNft: tokenId is invalid");
+        require(s.owners[tokenId_] != address(0), "NftToken: tokenId is invalid");
         return s.approved[tokenId_];
     }
 
@@ -214,7 +214,7 @@ contract DemNft is Modifiers {
         address owner = s.owners[tokenId_];
         require(
             owner == msg.sender || s.operators[owner][msg.sender],
-            "DemNft: Not owner or operator of token."
+            "NftToken: Not owner or operator of token."
         );
         s.approved[tokenId_] = approved_;
         emit LibERC721.Approval(owner, approved_, tokenId_);
@@ -237,18 +237,18 @@ contract DemNft is Modifiers {
         address to_,
         uint256 tokenId_
     ) internal {
-        require(to_ != address(0), "DemNft: Can't transfer to 0 address");
-        require(from_ != address(0), "DemNft: _from can't be 0 address");
+        require(to_ != address(0), "NftToken: Can't transfer to 0 address");
+        require(from_ != address(0), "NftToken: _from can't be 0 address");
         require(
             from_ == s.owners[tokenId_],
-            "DemNft: _from is not owner, transfer failed"
+            "NftToken: _from is not owner, transfer failed"
         );
         require(
             sender_ == from_ ||
                 s.operators[from_][sender_] ||
                 sender_ == s.approved[tokenId_],
-            "DemNft: Not owner or approved to transfer"
+            "NftToken: Not owner or approved to transfer"
         );
-        LibDemNft.transfer(from_, to_, tokenId_);
+        LibNftPairing.transfer(from_, to_, tokenId_);
     }
 }
