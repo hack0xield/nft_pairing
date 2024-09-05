@@ -56,7 +56,7 @@ const config: HardhatUserConfig = {
     base: {
       url: "https://mainnet.base.org",
       accounts: [privateKey],
-      gasPrice: 1000000000,
+      gasPrice: 100000000,
     },
     base_sepolia: {
       url: "https://sepolia.base.org",
