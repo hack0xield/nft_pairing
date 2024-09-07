@@ -86,6 +86,10 @@ contract MintFacet is Modifiers {
         _squeezeQueue();
     }
 
+    function burnContractNft(uint256 id_) external onlyRewardManager {
+        LibNftPairing.transfer(address(this), address(0), id_);
+    }
+
     function mint(
         address rev1_,
         uint256 id1_,
@@ -192,7 +196,7 @@ contract MintFacet is Modifiers {
     ) external payable {
         require(
             s.owners[id_] == address(this),
-            "MintFacet: this NFT already purchased"
+            "MintFacet: this NFT is not for sale"
         );
         require(
             s.nftBuyPrice <= msg.value,
