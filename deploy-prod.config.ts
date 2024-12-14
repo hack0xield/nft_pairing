@@ -5,11 +5,11 @@ export let deployConfig = {
     NftSymbol: "REDPACK",
     NftImage: "ipfs://QmNxoKNhU5nXaNQceGYofUQyPfDBaeCNzHkQu72MqY4dHm",
 
-    RewardMgr: "0xcFD87f74DcDba89a49784F0C4dA5AE45188e1730",
+    RewardMgr: "0x1493EdAb2Bc5c2d24674288282B7D45527BaBD85",
     RewardMgrInitNfts: 2,
 
     MaxNftUseCount: 5,
-    NftBuyPrice: ethers.parseEther("0.01"),
+    NftBuyPrice: ethers.parseEther("0.001"),
     nftCdSec: 300,
     pairingLimit: 1,
 }

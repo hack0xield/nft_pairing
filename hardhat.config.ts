@@ -4,17 +4,26 @@ const fs = require("fs");
 
 const privateKey = fs.readFileSync(".secret").toString("utf-8");
 const infuraKey = fs.readFileSync(".infura").toString("utf-8");
-const etherscan = fs.readFileSync(".etherscan").toString("utf-8");
+//const etherscan = fs.readFileSync(".etherscan").toString("utf-8");
 
 const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
-      base: [etherscan],
-      baseSepolia: [etherscan],
+      //base: [etherscan],
+      //baseSepolia: [etherscan],
       blast_sepolia: "blast_sepolia",
       blast: "blast", // apiKey is not required, just set a placeholder
+      berachain_testnet: "berachain_testnet",
     },
     customChains: [
+      {
+        network: "berachain_testnet",
+        chainId: 80084,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/80084/etherscan/api/",
+          browserURL: "https://bartio.beratrail.io/",
+        },
+      },
       {
         network: "blast_sepolia",
         chainId: 168587773,
@@ -36,6 +45,11 @@ const config: HardhatUserConfig = {
     ],
   },
   networks: {
+    berachain_testnet: {
+      chainId: 80084,
+      url: "https://bartio.rpc.berachain.com/",
+      accounts: [privateKey],
+    },
     mumbai: {
       url: "https://polygon-mumbai.infura.io/v3/" + infuraKey,
       accounts: [privateKey],
